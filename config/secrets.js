@@ -18,8 +18,17 @@
 
 module.exports = {
 
-  db: process.env.MONGOLAB_URI || process.env.MONGODB || 'mongodb://localhost:27017/test',
-
+  db: {
+    host: 'localhost',
+    name: 'learn_io',
+    username: 'arc',
+    password: 'arc'
+  },
+  redis: {
+    host: 'localhost',
+    "port": 6379,
+    "ttl": 43200
+  },
   sessionSecret: process.env.SESSION_SECRET || 'Your Session Secret goes here',
 
   mailgun: {

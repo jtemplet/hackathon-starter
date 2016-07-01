@@ -11,15 +11,14 @@ var logger = require('morgan');
 var errorHandler = require('errorhandler');
 var csrf = require('lusca').csrf();
 var methodOverride = require('method-override');
-
 var _ = require('lodash');
-var MongoStore = require('connect-mongo')(session);
+var RedisStore = require('connect-redis')(session);
 var flash = require('express-flash');
 var path = require('path');
-var mongoose = require('mongoose');
 var passport = require('passport');
 var expressValidator = require('express-validator');
 var connectAssets = require('connect-assets');
+var models = require('./models');
 
 /**
  * Controllers (route handlers).
@@ -44,15 +43,6 @@ var passportConf = require('./config/passport');
 var app = express();
 
 /**
- * Connect to MongoDB.
- */
-
-mongoose.connect(secrets.db);
-mongoose.connection.on('error', function() {
-  console.error('MongoDB Connection Error. Please make sure that MongoDB is running.');
-});
-
-/**
  * CSRF whitelist.
  */
 
@@ -75,11 +65,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());
 app.use(methodOverride());
 app.use(cookieParser());
+var redisSessionStore = new RedisStore(secrets.redis);
 app.use(session({
-  resave: true,
-  saveUninitialized: true,
-  secret: secrets.sessionSecret,
-  store: new MongoStore({ url: secrets.db, auto_reconnect: true })
+    store: redisSessionStore,
+    secret: 'keyboard cat'
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -211,8 +200,10 @@ app.use(errorHandler());
  * Start Express server.
  */
 
-app.listen(app.get('port'), function() {
-  console.log('Express server listening on port %d in %s mode', app.get('port'), app.get('env'));
+models.sequelize.sync().then(function () {
+  app.listen(app.get('port'), function() {
+    console.log('Express server listening on port %d in %s mode', app.get('port'), app.get('env'));
+  });
 });
 
 module.exports = app;

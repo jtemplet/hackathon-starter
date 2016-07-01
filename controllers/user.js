@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
 var User = require('../models/User');
+var models = require('../models');
 var secrets = require('../config/secrets');
 
 /**
@@ -91,24 +92,51 @@ exports.postSignup = function(req, res, next) {
     return res.redirect('/signup');
   }
 
-  var user = new User({
-    email: req.body.email,
-    password: req.body.password
-  });
-
-  User.findOne({ email: req.body.email }, function(err, existingUser) {
-    if (existingUser) {
-      req.flash('errors', { msg: 'Account with that email address already exists.' });
-      return res.redirect('/signup');
+  models.User.find({
+    where: {
+      email: req.body.email
     }
-    user.save(function(err) {
-      if (err) return next(err);
-      req.logIn(user, function(err) {
-        if (err) return next(err);
-        res.redirect('/');
+  })
+  .then(function(existingUser) {
+    if (existingUser) {
+        req.flash('errors', { msg: 'Account with that email address already exists.' });
+        return res.redirect('/signup');
+    } else {
+      models.User.create({
+        email: req.body.email,
+        password: req.body.password
+      }).then(function(user) {
+        req.logIn(user, function(err) {
+          if (err) return next(err);
+          res.redirect('/');
+        });
+      }).catch(function(e) {
+        next(e);
       });
-    });
-  });
+    }
+  })
+  .catch(function(err) {
+    return next(err);
+  })
+
+  // var user = new User({
+  //   email: req.body.email,
+  //   password: req.body.password
+  // });
+  //
+  // User.findOne({ email: req.body.email }, function(err, existingUser) {
+  //   if (existingUser) {
+  //     req.flash('errors', { msg: 'Account with that email address already exists.' });
+  //     return res.redirect('/signup');
+  //   }
+  //   user.save(function(err) {
+  //     if (err) return next(err);
+  //     req.logIn(user, function(err) {
+  //       if (err) return next(err);
+  //       res.redirect('/');
+  //     });
+  //   });
+  // });
 };
 
 /**
@@ -128,20 +156,26 @@ exports.getAccount = function(req, res) {
  */
 
 exports.postUpdateProfile = function(req, res, next) {
-  User.findById(req.user.id, function(err, user) {
-    if (err) return next(err);
-    user.email = req.body.email || '';
-    user.profile.name = req.body.name || '';
-    user.profile.gender = req.body.gender || '';
-    user.profile.location = req.body.location || '';
-    user.profile.website = req.body.website || '';
+  models.User.findById(req.user.id)
+    .then(function(user) {
+      user.email = req.body.email || '';
+      user.profile.name = req.body.name || '';
+      user.profile.gender = req.body.gender || '';
+      user.profile.location = req.body.location || '';
+      user.profile.website = req.body.website || '';
 
-    user.save(function(err) {
-      if (err) return next(err);
-      req.flash('success', { msg: 'Profile information updated.' });
-      res.redirect('/account');
-    });
-  });
+      models.User.update({
+            email: user.email,
+            profile: user.profile
+         },
+         {
+           where: { id: req.user.id }
+         })
+        .then(function() {
+          req.flash('success', { msg: 'Profile information updated.' });
+          return res.redirect('/account');
+        })
+      })
 };
 
 /**
@@ -161,17 +195,17 @@ exports.postUpdatePassword = function(req, res, next) {
     return res.redirect('/account');
   }
 
-  User.findById(req.user.id, function(err, user) {
-    if (err) return next(err);
+  models.User.findById(req.user.id)
+    .then(function(user) {
+        user.password = req.body.password;
 
-    user.password = req.body.password;
-
-    user.save(function(err) {
-      if (err) return next(err);
-      req.flash('success', { msg: 'Password has been changed.' });
-      res.redirect('/account');
-    });
-  });
+        models.User.update({ password: user.password }, {
+                    where: { id: req.user.id }
+                  }).then(function(r) {
+                    req.flash('success', { msg: 'Password has been changed.' });
+                    res.redirect('/account');
+                  }).catch(function(e) { next(err); });
+  }); // findById()
 };
 
 /**
@@ -180,12 +214,15 @@ exports.postUpdatePassword = function(req, res, next) {
  */
 
 exports.postDeleteAccount = function(req, res, next) {
-  User.remove({ _id: req.user.id }, function(err) {
-    if (err) return next(err);
-    req.logout();
-    req.flash('info', { msg: 'Your account has been deleted.' });
-    res.redirect('/');
-  });
+  models.User.destroy({ where: { id: req.user.id } })
+    .then(function() {
+      req.logout();
+      req.flash('info', { msg: 'Your account has been deleted.' });
+      res.redirect('/');
+    })
+    .catch(function(e) {
+      return next(e);
+    });
 };
 
 /**
@@ -196,18 +233,24 @@ exports.postDeleteAccount = function(req, res, next) {
 
 exports.getOauthUnlink = function(req, res, next) {
   var provider = req.params.provider;
-  User.findById(req.user.id, function(err, user) {
-    if (err) return next(err);
-
-    user[provider] = undefined;
-    user.tokens = _.reject(user.tokens, function(token) { return token.kind === provider; });
-
-    user.save(function(err) {
-      if (err) return next(err);
-      req.flash('info', { msg: provider + ' account has been unlinked.' });
-      res.redirect('/account');
+  models.User.findById(req.user.id)
+    .then(function(user) {
+        user[provider] = undefined;
+        user.tokens = _.reject(user.tokens, function(token) { return token.kind === provider; });
+        models.User.update({
+          tokens: user.tokens
+        }, { where: { id: req.user.id} })
+            .then(function(result) {
+              req.flash('info', { msg: provider + ' account has been unlinked.' });
+              res.redirect('/account');
+            })
+            .catch(function(err) {
+              next(err);
+            }); // update
+    }) // findById()
+    .catch(function(err) {
+      return next(err);
     });
-  });
 };
 
 /**
