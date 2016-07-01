@@ -2,7 +2,7 @@
 Hackathon Starter [![Dependency Status](https://david-dm.org/sahat/hackathon-starter/status.svg?style=flat)](https://david-dm.org/sahat/hackathon-starter) [![Build Status](http://img.shields.io/travis/sahat/hackathon-starter.svg?style=flat)](https://travis-ci.org/sahat/hackathon-starter) [![Analytics](https://ga-beacon.appspot.com/UA-47447818-2/hackathon-starter?pixel)](https://github.com/igrigorik/ga-beacon)
 =======================
 
-:octocat: &nbsp;**Live Demo**: http://hackathonstarter.herokuapp.com 
+:octocat: &nbsp;**Live Demo**: http://hackathonstarter.herokuapp.com
 
 Jump to [What's new in 2.4.0?](#changelog)
 
@@ -55,7 +55,6 @@ Table of Contents
 - [Pro Tips](#pro-tips)
 - [FAQ](#faq)
 - [How It Works](#how-it-works-mini-guides)
-- [Mongoose Cheatsheet](#mongoose-cheatsheet)
 - [Deployment](#deployment)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -88,7 +87,8 @@ Features
 Prerequisites
 -------------
 
-- [MongoDB](http://www.mongodb.org/downloads)
+- [Postgres](https://www.postgresql.org/download/)
+- [Redis](http://redis.io/download)
 - [Node.js](http://nodejs.org)
 - Command Line Tools
  - <img src="http://deluge-torrent.org/images/apple-logo.gif" height="17">&nbsp;**Mac OS X**: [Xcode](https://itunes.apple.com/us/app/xcode/id497799835?mt=12) (or **OS X 10.9 Mavericks**: `xcode-select --install`)
@@ -99,8 +99,7 @@ Prerequisites
 
 :exclamation: **Note:** If you are new to Node or Express, I recommend to watch
 [Node.js and Express 101](http://www.youtube.com/watch?v=BN0JlMZCtNU)
-screencast by Alex Ford that teaches Node and Express from scratch. Alternatively,
-here is another great tutorial for complete beginners - [Getting Started With Node.js, Express, MongoDB](http://cwbuecheler.com/web/tutorials/2013/node-express-mongo/).
+screencast by Alex Ford that teaches Node and Express from scratch.
 
 Getting Started
 ---------------
@@ -129,7 +128,7 @@ restart the server each time you make a small change in code. To install, run
 Generator
 ---------
 
-Hackathon Starter Generator is currently in the experimental stage. It is tighly
+Hackathon Starter Generator is currently in the experimental stage. It is tightly
 tied to the project code. As soon as you start changing and moving things around,
 it will probably no longer work as expected. That is why it's best to use when
 you first download the project.
@@ -321,7 +320,7 @@ Project Structure
 | **controllers**/contact.js         | Controller for contact form.                                |
 | **controllers**/home.js            | Controller for home page (index).                           |
 | **controllers**/user.js            | Controller for user account management.                     |
-| **models**/User.js                 | Mongoose schema and model for User.                         |
+| **models**/User.js                 | Sequelize schema and model for User.                         |
 | **public**/                        | Static assets (fonts, css, js, img).                        |
 | **public**/**js**/application.js   | Specify client-side JavaScript dependencies.                |
 | **public**/**js**/main.js          | Place your client-side JavaScript here.                     |
@@ -353,7 +352,7 @@ List of Packages
 | cheerio                         | Scrape web pages using jQuery-style syntax.  |
 | clockwork                       | Clockwork SMS API library. |
 | connect-assets                  | Compiles LESS stylesheets, concatenates & minifies JavaScript. |
-| connect-mongo                   | MongoDB session store for Express. |
+| connect-redis                   | Redis session store for Express. |
 | csso                            | Dependency for connect-assets library to minify CSS. |
 | express                         | Node.js web framework. |
 | body-parser                     | Express 4.0 middleware. |
@@ -372,7 +371,7 @@ List of Packages
 | instagram-node                  | Instagram API library. |
 | less                            | LESS compiler. Used implicitly by connect-assets. |
 | lusca                           | CSRF middleware.        |
-| mongoose                        | MongoDB ODM. |
+| sequelize                       | Sequelize ODM. |
 | node-foursquare                 | Foursquare API library. |
 | node-linkedin                   | LinkedIn API library. |
 | nodemailer                      | Node.js library for sending emails. |
@@ -554,34 +553,6 @@ When you deploy your app, it will run in production mode, and so **connect-asset
 will automatically serve a single concatenated & minified `application.js`.
 For more information see [Sprockets-style concatenation](https://github.com/adunkman/connect-assets/#sprockets-style-concatenation)
 section.
-
-### I am getting MongoDB Connection Error, how do I fix it?
-That's a custom error message defined in `app.js` to indicate that there was a
-problem connecting to MongoDB:
-
-```js
-mongoose.connection.on('error', function() {
-  console.error('✗ MongoDB Connection Error. Please make sure MongoDB is running.');
-});
-```
-You need to have a MongoDB server running before launching `app.js`. You can
-download MongoDB [here](mongodb.org/downloads), or install it via a package manager.
-<img src="http://dc942d419843af05523b-ff74ae13537a01be6cfec5927837dcfe.r14.cf1.rackcdn.com/wp-content/uploads/windows-8-50x50.jpg" height="17">
-Windows users, read [Install MongoDB on Windows](http://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/).
-
-:bulb: **Tip:** If you are always connected to the internet, you could just use
-[MongoLab](https://mongolab.com/) or [MongoHQ](https://www.mongohq.com/) instead
-of downloading and installing MongoDB locally. You will only need to update the
-`db` property in `config/secrets.js`.
-
-### I get an error when I deploy my app, why?
-Chances are you haven't changed the *Dabatase URI* in `secrets.js`. If `db` is
-set to `localhost`, it will only work on your machine as long as MongoDB is
-running. When you deploy to Heroku, OpenShift or some other provider, you will not have MongoDB
-running on `localhost`. You need to create an account with [MongoLab](http://mongolab.com)
-or [MongoHQ](http://mongohq.com), then create a free tier database.
-See [Deployment](#deployment) for more information on how to setup an account
-and a new database step-by-step with MongoLab.
 
 ### Why Jade instead of Handlebars?
 When I first started this project I didn't have any experience with Handlebars. Since then I have worked on Ember.js apps and got myself familiar with the Handlebars syntax. While it is true Handlebars is easier, because it looks like good old HTML, I have no regrets picking Jade over Handlebars. First off, it's the default template engine in Express, so someone who has built Express apps in the past already knows it. Secondly, I find `extends` and `block` to be indispensable, which as far as I know, Handlebars does not have out of the box. And lastly, subjectively speaking, Jade looks much cleaner and shorter than Handlebars, or any non-HAML style for that matter.
@@ -897,7 +868,7 @@ difficult to maintain everything in a single file.
 
 That's all there is to it. Express.js is super simple to use.
 Most of the time you will be dealing with other APIs to do the real work:
-[Mongoose](http://mongoosejs.com/docs/guide.html) for querying database, socket.io for sending and receiving messages over websockets,
+[Sequelize](http://docs.sequelizejs.com/en/latest/) for querying database, socket.io for sending and receiving messages over websockets,
 sending emails via [Nodemailer](http://www.nodemailer.com/), form validation using [express-validator](https://github.com/ctavan/express-validator) library,
 parsing websites using [Cheerio](https://github.com/MatthewMueller/cheerio), and etc.
 
@@ -1028,47 +999,6 @@ If you want to see a really cool real-time dashboard check out this
 [pull request #23](https://github.com/sahat/hackathon-starter/pull/23/files) to
 see how it is implemented.
 
-Mongoose Cheatsheet
--------------------
-
-#### Find all users:
-```js
-User.find(function(err, users) {
-  console.log(users);
-});
-```
-
-#### Find a user by email:
-```js
-var userEmail = 'example@gmail.com';
-User.findOne({ email: userEmail }, function(err, user) {
-  console.log(user);
-});
-```
-
-#### Find 5 most recent user accounts:
-```js
-User
-  .find()
-  .sort({ _id: -1 })
-  .limit(5)
-  .exec(function(err, users) {
-    console.log(users);
-  });
-```
-
-#### Get total count of a field from all documents:
-Let's suppose that each user has a `votes` field and you would like to count
-the total number of votes in your database accross all users. One very
-inefficient way would be to loop through each document and manually accumulate
-the count. Or you could use [MongoDB Aggregation Framework](http://docs.mongodb.org/manual/core/aggregation-introduction/) instead:
-
-```js
-User.aggregate({ $group: { _id: null, total: { $sum: '$votes' } } }, function(err, votesCount) {
-  console.log(votesCount.total);
-});
-```
-
 Deployment
 ----------
 
@@ -1076,8 +1006,7 @@ Once you are ready to deploy your app, you will need to create an account with
 a cloud platform to host it. These are not the only choices, but they are my top
 picks. From my experience, **Heroku** is the easiest to get started with, it will
 automatically restart your Node.js process when it crashes, zero-downtime
-deployments and custom domain support on free accounts. Additionally, you can
-create an account with **MongoLab** and then pick one of the *4* providers below.
+deployments and custom domain support on free accounts.
 Again, there are plenty of other choices and you are not limited to just the ones
 listed below.
 
@@ -1087,33 +1016,11 @@ listed below.
 - Download and install [Heroku Toolbelt](https://toolbelt.heroku.com/)
 - In terminal, run `heroku login` and enter your Heroku credentials
 - From *your app* directory run `heroku create`
-- Run `heroku addons:add mongolab` to set up Mongo and configure your environment variables
 - Lastly, do `git push heroku master`.  Done!
 
 **:exclamation:Note:** To install Heroku add-ons your account must be verified.
 
 ---
-
-<img src="http://i.imgur.com/7KnCa5a.png" width="200">
-- Open [mongolab.com](https://mongolab.com) website
-- Click the yellow **Sign up** button
-- Fill in your user information then hit **Create account**
-- From the dashboard, click on **:zap:Create new** button
-- Select **any** cloud provider (I usually go with AWS)
-- Under *Plan* click on **Single-node (development)** tab and select **Sandbox** (it's free)
- - *Leave MongoDB version as is - `2.4.x`*
-- Enter *Database name** for your web app
-- Then click on **:zap:Create new MongoDB deployment** button
-- Now, to access your database you need to create a DB user
-- Click to the recently created database
-- You should see the following message:
- - *A database user is required to connect to this database.* **Click here** *to create a new one.*
-- Click the link and fill in **DB Username** and **DB Password** fields
-- Finally, in `secrets.js` instead of `db: 'localhost'`, use the following URI with your credentials:
- - `db: 'mongodb://USERNAME:PASSWORD@ds027479.mongolab.com:27479/DATABASE_NAME'`
-
-**:exclamation:Note:** As an alternative to MongoLab, there is also [MongoHQ](http://www.mongohq.com/home).
-
 
 <img src="http://www.opencloudconf.com/images/openshift_logo.png" width="200">
 - First, install this Ruby gem: `sudo gem install rhc` :gem:
@@ -1174,20 +1081,6 @@ Add this to `package.json`, after *name* and *version*. This is necessary becaus
  - **Note:** *You will be prompted for the password you created earlier*
 - On **Deployments** tab of your Windows Azure Web Site, you will see the deployment history
 
-<img src="http://www.comparethecloud.net/wp-content/uploads/2014/06/ibm-bluemix_pr-030514.jpg" width="200">
-
-- Go to [Codename: Bluemix](http://bluemix.net) to signup for the free trial, or login with your *IBM id*
-- Install [Cloud Foundry CLI](https://github.com/cloudfoundry/cli)
-- Navigate to your **hackathon-starter** directory and then run `cf push [your-app-name] -m 512m` command to deploy the application
- - **Note:** You must specify a unique application name in place of `[your-app-name]`
-- Run `cf create-service mongodb 100 [your-service-name]` to create a [MongoDB service](https://www.ng.bluemix.net/docs/#services/MongoDB/index.html#MongoDB)
-- Run `cf bind-service [your-app-name] [your-service-name]` to associate your application with a service created above
-- Run `cf files [your-app-name] logs/env.log` to see the *environment variables created for MongoDB.
-- Copy the **MongoDB URI** that should look something like the following: `mongodb://68638358-a3c6-42a1-bae9-645b607d55e8:46fb97e6-5ce7-4146-9a5d-d623c64ff1fe@192.155.243.23:10123/db`
-- Then set it as an environment variable for your application by running `cf set-env [your-app-name] MONGODB [your-mongodb-uri]`
-- Run `cf restart [your-app-name]` for the changes to take effect.
-- Visit your starter app at **http://[your-app-name].ng.bluemix.net**
-- Done!
 
 **Note:** Alternative directions, including how to setup the project with a DevOps pipeline are available at [http://ibm.biz/hackstart](http://ibm.biz/hackstart).
 A longer version of these instructions with screenshots is available at [http://ibm.biz/hackstart2](http://ibm.biz/hackstart2).
@@ -1195,135 +1088,7 @@ Also, be sure to check out the [Jump-start your hackathon efforts with DevOps Se
 
 Changelog
 ---------
-
-### 2.4.0 (November 8, 2014)
-- Bootstrap 3.3.0.
-- Flatly 3.3.0 theme.
-- User model cleanup.
-- Removed `helperContext` from connect-assets middleware.
-
-### 2.3.4 (October 27, 2014)
-- Font Awesome 4.2.0 [01e7bd5c09926911ca856fe4990e6067d9148694](https://github.com/sahat/hackathon-starter/commit/01e7bd5c09926911ca856fe4990e6067d9148694)
-- Code cleanup in `app.js` and `controllers/api.js`. [8ce48f767c0146062296685cc101acf3d5d224d9](https://github.com/sahat/hackathon-starter/commit/8ce48f767c0146062296685cc101acf3d5d224d9) [cdbb9d1888a96bbba92d4d14deec99a8acba2618](https://github.com/sahat/hackathon-starter/commit/cdbb9d1888a96bbba92d4d14deec99a8acba2618)
-- Updated Stripe API example. [afef373cd57b6a44bf856eb093e8f2801fc2dbe2](https://github.com/sahat/hackathon-starter/commit/afef373cd57b6a44bf856eb093e8f2801fc2dbe2)
-- Added 1-step deployment process with Heroku and MongoLab add-on. [c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f](https://github.com/sahat/hackathon-starter/commit/c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f)
-- Updated Twitter apps dashboard url. [e378fbbc24e269de69494d326bc20fcb641c0697](https://github.com/sahat/hackathon-starter/commit/e378fbbc24e269de69494d326bc20fcb641c0697)
-- Fixed dead links in the README. [78fac5489c596e8bcef0ab11a96e654335573bb4](https://github.com/sahat/hackathon-starter/commit/78fac5489c596e8bcef0ab11a96e654335573bb4)
-
-### 2.3.3 (September 1, 2014)
-- Use *https* (instead of http) profile image URL with Twitter authentication
-
-### 2.3.2 (July 28, 2014)
-- Fixed an issue with connect-assets when running `app.js` from an outside folder
-- Temporarily disabled `setup.js` on Windows platform until [blessed](https://github.com/chjj/blessed) fixes its problems
-
-### 2.3.1 (July 15, 2014)
-- Migrated to Nodemailer 1.0
-
-### 2.3 (July 2, 2014)
-- Bootstrap 3.2
-- New default theme
-- Ionicons fonts
-- Fixed bodyParser deprecation warning
-- Minor visual updates
-- CSS cleanup via RECESS
-- Replaced `navbar-brand` image with a font icon
-
-### 2.2.1 (June 17, 2014)
-- Added IBM Codename: BlueMix deployment instructions
-
-### 2.2 (June 6, 2014)
-- Use Lodash instead of Underscore.js
-- Replaced all occurences of `_.findWhere` with `_.find`
-- Added a flash message when user deletes an account
-- Updated and clarified some comments
-- Updated the Remove Auth message in `setup.js`
-- Cleaned up `styles.less`
-- Redesigned API Examples page
-- Updated Last.fm API example
-- Updated Steam API example
-- Updated Instagram API example
-- Updated Facebook API example
-- Updated jQuery to 2.1.1
-- Fixed a bug that didn't remove Instagram Auth properly
-- Fixed Foursquare secret token
-
-### 2.1.4 (June 5, 2014)
-- Fixed a bug related to `returnTo` url (#155)
-
-### 2.1.3 (June 3, 2014)
-- Font Awesome 4.1
-- Updated icons on some API examples
-- Use LESS files for *bootstrap-social* and *font-awesome*
-
-### 2.1.2 (June 2, 2014)
-- Improved Twilio API example
-- Updated dependencies
-
-### 2.1.1 (May 29, 2014)
-- Added **Compose new Tweet** to Twitter API example
-- Fixed email service indentation
-- Fixed Mailgun and Mandrill secret.js properties
-- Renamed `navigation.jade` to `navbar.jade`
-
-### 2.1 (May 13, 2014)
-- New and improved generator - **setup.js**
-- Added Yahoo API
-- CSS and templates cleanup
-- Minor improvement to the default theme
-- `cluster_app.js` has been moved into **setup.js**
-
-### 2.0.4 (April 26, 2014)
-- Added Mandrill e-mail service (via generator)
-
-### 2.0.3 (April 25, 2014)
-- LinkedIn API: Fixed an error if a user did not specify education on LinkedIn
-- Removed email constraint when linking OAuth accounts in order to be able to merge accounts that use the same email address
-- Check if email address is already taken when creating a new local account
- - Previously relied on Validation Error 11000, which doesn't always work
-- When creating a local account, checks if e-mail address is already taken
-- Flash notifications can now be dismissed by clicking on ×
-
-### 2.0.2 (April 22, 2014)
-- Added Instagram Authentication
-- Added Instagram API example
-- Updated Instagram Strategy to use a "fake" email address similar to Twitter Startegy
-
-### 2.0.1 (April 18, 2014)
-- Conditional CSRF support using [lusca](https://github.com/krakenjs/lusca)
-- Fixed EOL problem in `generator.js` for Windows users
-- Fixed outdated csrf token string on profile.jade
-- Code cleanup
-
-### 2.0.0 (April 15, 2014)
-There are have been over **500+** commits since the initial announcement in
-January 2014 and over a **120** issues and pull requests from **28** contributors.
-
-- Documention grew **8x** in size since the announcement on Hacker News
-- Upgraded to Express 4.0
-- Generator for adding/removing authentication providers
-- New Instagram authentication that can be added via generator
-- Forgot password and password reset for Local authentication
-- Added LinkedIn authentication and API example
-- Added Stripe API example
-- Added Venmo API example
-- Added Clockwork SMS example
-- Nicer Facebook API example
-- Pre-populated secrets.js with API keys (not linked to my personal accounts)
-- Grid layout with company logos on API Examples page
-- Added tests (Mocha, Chai, Supertest)
-- Gravatar pictures in Navbar and Profile page
-- Tracks last visited URL before signing in to redirect back to original destination
-- CSRF protection
-- Gzip compression and static assets caching
-- Client-side JavaScript is automatically minified+concatenated in production
-- Navbar, flash messages, footer refactored into partial templates
-- Support for Node.js clusters
-- Support for Mailgun email service
-- Support for environment variables in secrets.js
-- Switched from less-middleware to connect-assets
-- Bug fixes related to multi-authentication login and account linking
-- Other small fixes and changes that are too many to list
+  * Forked 7/1/2016
 
 Contributing
 ------------
